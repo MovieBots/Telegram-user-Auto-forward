@@ -128,3 +128,24 @@ async def auto_forward(_, message):
 if __name__ == "__main__":
     log.info("Starting user-session auto-forwarder")
     app.run()
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
+class HealthHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"OK")
+
+    def log_message(self, *args):
+        pass
+
+def start_health_server():
+    port = int(os.environ.get("PORT", "8080"))
+    server = HTTPServer(("0.0.0.0", port), HealthHandler)
+    server.serve_forever()
+
+threading.Thread(
+    target=start_health_server,
+    daemon=True
+).start()
