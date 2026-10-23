@@ -1,7 +1,8 @@
 import asyncio
 import logging
 import os
-
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from pyrogram import Client, filters
 from pyrogram.errors import FloodWait
 
@@ -125,11 +126,6 @@ async def auto_forward(_, message):
     except Exception:
         log.exception("Copy failed for message %s from %s", message.id, message.chat.id)
 
-if __name__ == "__main__":
-    log.info("Starting user-session auto-forwarder")
-    app.run()
-import threading
-from http.server import BaseHTTPRequestHandler, HTTPServer
 
 class HealthHandler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -137,15 +133,22 @@ class HealthHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(b"OK")
 
-    def log_message(self, *args):
+    def log_message(self, format, *args):
         pass
+
 
 def start_health_server():
     port = int(os.environ.get("PORT", "8080"))
     server = HTTPServer(("0.0.0.0", port), HealthHandler)
     server.serve_forever()
 
+
 threading.Thread(
     target=start_health_server,
     daemon=True
 ).start()
+
+
+if __name__ == "__main__":
+    log.info("Starting user-session auto-forwarder")
+    app.run()
